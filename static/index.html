@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BloomCraft Florals - Flower Shop Management System</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
+</head>
+<body>
+
+  <!-- DEMO QUICK ROLE SWITCHER BAR -->
+  <div class="demo-bar no-print">
+    <div style="display: flex; align-items: center; gap: 0.5rem;">
+      <span style="font-weight: 700; color: #ffc9c9;">⚡ Quick Role Switcher:</span>
+      <span style="color: #adb5bd; font-size: 0.8rem;">(Click to instantly switch user persona)</span>
+    </div>
+    <div class="demo-pills">
+      <button class="demo-pill" data-role="Admin" onclick="quickLogin('admin')">👑 Admin (Sarah)</button>
+      <button class="demo-pill" data-role="Florist" onclick="quickLogin('florist')">💐 Florist / Staff (John)</button>
+      <button class="demo-pill" data-role="Delivery" onclick="quickLogin('delivery')">🛵 Delivery Rider (Alex)</button>
+      <button class="demo-pill" data-role="Customer" onclick="quickLogin('customer')">🛍️ Customer (Ananya)</button>
+    </div>
+  </div>
+
+  <!-- MAIN NAVIGATION -->
+  <header class="navbar no-print">
+    <a href="#" class="nav-brand" onclick="switchView('catalog')">
+      <span class="brand-icon">🌸</span>
+      <span>BloomCraft <span style="font-weight: 300; font-size: 0.95rem; color: #6c757d;">Florals</span></span>
+    </a>
+
+    <ul class="nav-links">
+      <li><button class="nav-link active" data-view="catalog" onclick="switchView('catalog')">🌺 Catalog</button></li>
+      <li><button class="nav-link" id="navMyOrders" data-view="my-orders" style="display: none;" onclick="switchView('my-orders')">📦 My Orders</button></li>
+      <li><button class="nav-link" id="navStaffPortal" data-view="staff-portal" style="display: none;" onclick="switchView('staff-portal')">💐 Staff Portal</button></li>
+      <li><button class="nav-link" id="navDeliveryPortal" data-view="delivery-portal" style="display: none;" onclick="switchView('delivery-portal')">🛵 Delivery Runs</button></li>
+      <li><button class="nav-link" id="navAdminPortal" data-view="admin-portal" style="display: none;" onclick="switchView('admin-portal')">👑 Admin Dashboard</button></li>
+    </ul>
+
+    <div class="nav-actions">
+      <!-- Loyalty Points Badge -->
+      <span id="loyaltyBadge" class="badge badge-warning" style="display: none;">⭐ 150 pts</span>
+
+      <!-- Cart Button -->
+      <button class="btn btn-outline-primary" onclick="openCartModal()" title="View Cart">
+        <span>🛒</span>
+        <span>Cart</span>
+        <span id="cartBadge" class="badge badge-primary" style="display: none;">0</span>
+      </button>
+
+      <!-- User Greeting -->
+      <div id="userGreeting" style="display: none; align-items: center; gap: 0.4rem; font-size: 0.85rem;"></div>
+
+      <!-- Login / Logout buttons -->
+      <button id="loginNavBtn" class="btn btn-primary" onclick="openModal('authModal')">Sign In</button>
+      <button id="logoutNavBtn" class="btn btn-secondary" style="display: none;" onclick="logoutUser()">Sign Out</button>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <main class="container">
+
+    <!-- ================= VIEW 1: FLOWER CATALOG & STOREFRONT ================= -->
+    <section id="view-catalog" class="view-section">
+      <!-- Hero Banner -->
+      <div class="hero-banner">
+        <div class="hero-text">
+          <h1>Fresh Handcrafted Blooms</h1>
+          <p>Hand-picked daily from artisanal flower farms. Express delivery for birthdays, anniversaries, weddings, and celebrations across town.</p>
+        </div>
+        <div class="hero-features">
+          <div class="feature-tag">🚚 Same-Day Delivery</div>
+          <div class="feature-tag">🌸 100% Fresh Guarantee</div>
+          <div class="feature-tag">🏷️ Code: <strong>FLOWER100</strong> (₹100 Off)</div>
+        </div>
+      </div>
+
+      <!-- Filter and Search Bar -->
+      <div class="filter-bar">
+        <div class="filter-row">
+          <div class="search-input-wrapper">
+            <input type="text" id="searchInput" class="form-control" placeholder="🔍 Search roses, orchids, lilies, colors...">
+          </div>
+          <div style="min-width: 150px;">
+            <select id="colorFilter" class="form-control">
+              <option value="">All Colors</option>
+              <option value="Red">Red</option>
+              <option value="Pink">Pink</option>
+              <option value="Purple">Purple</option>
+              <option value="White">White</option>
+              <option value="Yellow">Yellow</option>
+              <option value="Blue">Blue</option>
+              <option value="Mixed">Mixed</option>
+            </select>
+          </div>
+          <div style="min-width: 170px;">
+            <select id="occasionFilter" class="form-control">
+              <option value="">All Occasions</option>
+              <option value="Anniversary">Anniversary</option>
+              <option value="Birthday">Birthday</option>
+              <option value="Wedding">Wedding</option>
+              <option value="Valentine">Valentine's</option>
+              <option value="Celebration">Celebration</option>
+              <option value="Sympathy">Sympathy</option>
+            </select>
+          </div>
+          <div style="min-width: 160px;">
+            <select id="sortSelect" class="form-control">
+              <option value="name_asc">Sort: Name (A-Z)</option>
+              <option value="price_asc">Price: Low to High</option>
+              <option value="price_desc">Price: High to Low</option>
+              <option value="stock_asc">Stock Level</option>
+            </select>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.9rem;">
+            <input type="checkbox" id="inStockFilter" style="cursor: pointer;">
+            <label for="inStockFilter" style="cursor: pointer; user-select: none;">In Stock Only</label>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="resetFilters()">Reset</button>
+        </div>
+
+        <!-- Category Filter Pills -->
+        <div id="categoryChips" class="category-chips"></div>
+      </div>
+
+      <!-- Flower Grid -->
+      <div id="flowerGrid" class="flower-grid"></div>
+    </section>
+
+    <!-- ================= VIEW 2: CUSTOMER MY ORDERS & STATUS TRACKER ================= -->
+    <section id="view-my-orders" class="view-section" style="display: none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <div>
+          <h2>My Orders & Live Delivery Tracking</h2>
+          <p style="color: #6c757d;">Track order lifecycle from florist preparation to doorstep delivery.</p>
+        </div>
+        <button class="btn btn-outline-primary" onclick="loadCustomerOrders()">🔄 Refresh Status</button>
+      </div>
+      <div id="customerOrdersList"></div>
+    </section>
+
+    <!-- ================= VIEW 3: FLORIST / STAFF PORTAL ================= -->
+    <section id="view-staff-portal" class="view-section" style="display: none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <h2>💐 Florist & Shop Staff Workspace</h2>
+          <p style="color: #6c757d;">Manage incoming orders, advance preparation stages, assign delivery riders, and monitor fresh inventory.</p>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+          <button class="btn btn-primary" onclick="openModal('addFlowerModal')">+ Add Flower to Catalog</button>
+          <button class="btn btn-secondary" onclick="loadStaffPortal()">🔄 Refresh</button>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 2.5rem;">
+        <h3 style="margin-bottom: 1rem;">Incoming & Active Orders</h3>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Order #</th>
+                <th>Customer</th>
+                <th>Items Ordered</th>
+                <th>Delivery Address & Date</th>
+                <th>Status</th>
+                <th>Assign Delivery Rider</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="staffOrdersTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div>
+        <h3 style="margin-bottom: 1rem;">Fresh Flower Stock Monitoring & Quick Restock</h3>
+        <p style="font-size: 0.85rem; color: #6c757d; margin-bottom: 0.75rem;">Items highlighted in yellow have less than 10 stems in stock (Low Stock Alert).</p>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Flower Name</th>
+                <th>Category</th>
+                <th>Unit Price</th>
+                <th>Current Stock Quantity</th>
+                <th>Quick Restock</th>
+              </tr>
+            </thead>
+            <tbody id="staffInventoryTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= VIEW 4: DELIVERY RUNS PORTAL ================= -->
+    <section id="view-delivery-portal" class="view-section" style="display: none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <div>
+          <h2>🛵 Delivery Rider Hub</h2>
+          <p style="color: #6c757d;">View assigned orders, customer addresses, notes, and update delivery status to 'Out for Delivery' and 'Delivered'.</p>
+        </div>
+        <button class="btn btn-outline-primary" onclick="loadDeliveryPortal()">🔄 Refresh Runs</button>
+      </div>
+
+      <div id="deliveryCardsList"></div>
+    </section>
+
+    <!-- ================= VIEW 5: ADMINISTRATOR DASHBOARD ================= -->
+    <section id="view-admin-portal" class="view-section" style="display: none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <h2>👑 Administrator Control Center</h2>
+          <p style="color: #6c757d;">Full administrative governance over flowers, categories, suppliers, staff, customers, and sales reports.</p>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+          <button class="btn btn-secondary" onclick="loadAdminDashboard()">🔄 Refresh Dashboard</button>
+        </div>
+      </div>
+
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-icon-box" style="background: #e6fcf5; color: #099268;">💰</div>
+          <div>
+            <div id="metricRevenue" class="metric-value">₹0</div>
+            <div class="metric-label">Total Revenue</div>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon-box" style="background: #e7f5ff; color: #1c7ed6;">📦</div>
+          <div>
+            <div id="metricOrders" class="metric-value">0</div>
+            <div class="metric-label">Total Orders</div>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon-box" style="background: #fff9db; color: #f59f00;">⏳</div>
+          <div>
+            <div id="metricPending" class="metric-value">0</div>
+            <div class="metric-label">Pending Processing</div>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon-box" style="background: #ffe3e3; color: #fa5252;">⚠️</div>
+          <div>
+            <div id="metricLowStock" class="metric-value">0</div>
+            <div class="metric-label">Low Stock Alerts</div>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon-box" style="background: #fff0f6; color: #d6336c;">👥</div>
+          <div>
+            <div id="metricCustomers" class="metric-value">0</div>
+            <div class="metric-label">Total Customers</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem; flex-wrap: wrap;">
+        <div style="background: #fff; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.5rem; box-shadow: var(--shadow-sm);">
+          <h4 style="margin-bottom: 1rem; color: #495057;">📊 Sales Revenue by Category</h4>
+          <div id="adminCategorySales"></div>
+        </div>
+        <div style="background: #fff; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.5rem; box-shadow: var(--shadow-sm);">
+          <h4 style="margin-bottom: 1rem; color: #495057;">📈 Order Lifecycle Distribution</h4>
+          <div id="adminStatusDistribution"></div>
+        </div>
+      </div>
+
+      <div class="tabs-nav">
+        <button class="tab-btn active" data-tab="flowers" onclick="switchAdminTab('flowers')">🌺 Flower Catalog</button>
+        <button class="tab-btn" data-tab="categories" onclick="switchAdminTab('categories')">📁 Categories</button>
+        <button class="tab-btn" data-tab="suppliers" onclick="switchAdminTab('suppliers')">🚛 Suppliers</button>
+        <button class="tab-btn" data-tab="staff" onclick="switchAdminTab('staff')">👩‍🍳 Staff & Personnel</button>
+        <button class="tab-btn" data-tab="customers" onclick="switchAdminTab('customers')">👥 Customers</button>
+      </div>
+
+      <div id="admin-tab-flowers" class="admin-tab-pane">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h4>Flowers Inventory</h4>
+          <button class="btn btn-primary btn-sm" onclick="openModal('addFlowerModal')">+ Add Flower</button>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Color</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="adminFlowersTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="admin-tab-categories" class="admin-tab-pane" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h4>Flower Categories</h4>
+          <button class="btn btn-primary btn-sm" onclick="openModal('addCategoryModal')">+ Add Category</button>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Category Name</th>
+                <th>Description</th>
+                <th>Flowers Count</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="adminCategoriesTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="admin-tab-suppliers" class="admin-tab-pane" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h4>Wholesale Suppliers & Nurseries</h4>
+          <button class="btn btn-primary btn-sm" onclick="openModal('addSupplierModal')">+ Add Supplier</button>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Supplier Name</th>
+                <th>Contact</th>
+                <th>Email</th>
+                <th>Farm Address</th>
+              </tr>
+            </thead>
+            <tbody id="adminSuppliersTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="admin-tab-staff" class="admin-tab-pane" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h4>Staff Directory & Roles</h4>
+          <button class="btn btn-primary btn-sm" onclick="openModal('addStaffModal')">+ Add Staff Member</button>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Assigned Role</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="adminStaffTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="admin-tab-customers" class="admin-tab-pane" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h4>Customer Accounts & Loyalty</h4>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Total Orders</th>
+                <th>Lifetime Value</th>
+                <th>Loyalty Points</th>
+              </tr>
+            </thead>
+            <tbody id="adminCustomersTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================= MODALS ================= -->
+
+  <!-- 1. FLOWER DETAIL MODAL -->
+  <div id="flowerModal" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>Flower Details</h3>
+        <button class="modal-close" onclick="closeModal('flowerModal')">&times;</button>
+      </div>
+      <div id="flowerModalContent" class="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- 2. CART MODAL -->
+  <div id="cartModal" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>🛒 Your Flower Basket</h3>
+        <button class="modal-close" onclick="closeModal('cartModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="cartItemsList"></div>
+
+        <div style="margin-top: 1.5rem; background: #f8f9fa; padding: 1rem; border-radius: 8px;">
+          <label style="font-size: 0.85rem; font-weight: 600; color: #495057; display: block; margin-bottom: 0.4rem;">Have a Coupon Code?</label>
+          <div style="display: flex; gap: 0.5rem;">
+            <input type="text" id="couponCodeInput" class="form-control" placeholder="Try FLOWER100 or WELCOME20" style="text-transform: uppercase;">
+            <button class="btn btn-secondary" onclick="applyCoupon()">Apply</button>
+          </div>
+          <div style="font-size: 0.75rem; color: #868e96; margin-top: 0.35rem;">Use code <strong>FLOWER100</strong> for ₹100 discount (as in Section 4.3).</div>
+        </div>
+
+        <div style="margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1rem;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem; font-size: 0.9rem;">
+            <span>Subtotal:</span>
+            <span id="cartSubtotal" style="font-weight: 600;">₹0.00</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem; font-size: 0.9rem;">
+            <span>Delivery Fee:</span>
+            <span id="cartDelivery" style="font-weight: 600;">₹50.00</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem; font-size: 0.9rem; color: #2b8a3e;">
+            <span>Discount:</span>
+            <span id="cartDiscount" style="font-weight: 600;">-₹0.00</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 2px solid var(--primary); font-size: 1.25rem; font-weight: 800; color: var(--primary-dark);">
+            <span>Total Payable:</span>
+            <span id="cartTotal">₹0.00</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('cartModal')">Continue Shopping</button>
+        <button id="checkoutBtn" class="btn btn-primary" onclick="proceedToCheckout()">Proceed to Checkout ➡️</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. CHECKOUT MODAL -->
+  <div id="checkoutModal" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>🛍️ Complete Delivery & Payment</h3>
+        <button class="modal-close" onclick="closeModal('checkoutModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="checkoutForm" onsubmit="event.preventDefault(); placeOrder();">
+          <div style="margin-bottom: 1rem;">
+            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Recipient Name *</label>
+            <input type="text" id="checkoutRecipientName" class="form-control" required placeholder="Full Name">
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Recipient Phone *</label>
+            <input type="tel" id="checkoutRecipientPhone" class="form-control" required placeholder="+91 98765 43210">
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Delivery Address *</label>
+            <textarea id="checkoutAddress" class="form-control" rows="2" required placeholder="Flat, Building, Street, Landmark, City"></textarea>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+            <div>
+              <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Delivery Date *</label>
+              <input type="date" id="checkoutDate" class="form-control" required>
+            </div>
+            <div>
+              <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Preferred Time Slot</label>
+              <select id="checkoutTimeSlot" class="form-control">
+                <option value="Morning (09:00 AM - 12:00 PM)">Morning (09:00 AM - 12:00 PM)</option>
+                <option value="Afternoon (12:00 PM - 04:00 PM)">Afternoon (12:00 PM - 04:00 PM)</option>
+                <option value="Evening (04:00 PM - 08:00 PM)">Evening (04:00 PM - 08:00 PM)</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">💌 Complimentary Gift Message Card</label>
+            <input type="text" id="checkoutGreeting" class="form-control" placeholder="E.g., Happy Birthday! Wishing you blossoming joy.">
+          </div>
+          <div style="margin-bottom: 1.5rem;">
+            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Payment Method *</label>
+            <select id="checkoutPaymentMethod" class="form-control">
+              <option value="Credit/Debit Card">Credit / Debit Card (Instant)</option>
+              <option value="UPI / QR">UPI / QR (PhonePe / GPay / Paytm)</option>
+              <option value="Cash on Delivery">Cash on Delivery (COD)</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;">Confirm & Place Order 🌸</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. TAX INVOICE MODAL -->
+  <div id="invoiceModal" class="modal-overlay">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-header no-print">
+        <h3>🧾 Order Invoice</h3>
+        <div style="display: flex; gap: 0.5rem;">
+          <button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ Print / Save PDF</button>
+          <button class="modal-close" onclick="closeModal('invoiceModal')">&times;</button>
+        </div>
+      </div>
+      <div id="invoiceContent" class="modal-body"></div>
+      <div class="modal-footer no-print">
+        <button class="btn btn-secondary" onclick="closeModal('invoiceModal')">Close</button>
+        <button class="btn btn-primary" onclick="window.print()">🖨️ Print Invoice</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. AUTHENTICATION (SIGN IN & REGISTER) MODAL -->
+  <div id="authModal" class="modal-overlay">
+    <div class="modal-dialog" style="max-width: 450px;">
+      <div class="modal-header">
+        <h3 id="authModalTitle">Sign In</h3>
+        <button class="modal-close" onclick="closeModal('authModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="display: flex; border-bottom: 2px solid var(--border); margin-bottom: 1.5rem;">
+          <button id="authTabLogin" class="tab-btn active" style="flex: 1;" onclick="toggleAuthTab('login')">Sign In</button>
+          <button id="authTabRegister" class="tab-btn" style="flex: 1;" onclick="toggleAuthTab('register')">New Customer</button>
+        </div>
+
+        <form id="loginForm">
+          <div style="margin-bottom: 1rem;">
+            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Role (Optional)</label>
+            <select id="loginRole" class="form-control">
+              <option value="">Auto-Detect from Email</option>
+              <option value="Customer">Customer</option>
+              <option value="Florist">Staff / Florist</option>
+              <option value="Delivery">Delivery Rider</option>
+              <option value="Admin">Administrator</option>
+            </select>
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Email Address *</label>
+            <input type="email" id="loginEmail" class="form-control" required placeholder="admin@flowershop.com">
+          </div>
+          <div style="margin-bottom: 1.5rem;">
+            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Password *</label>
+            <input type="password" id="loginPassword" class="form-control" required placeholder="••••••••">
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%;">Log In</button>
+        </form>
+
+        <form id="registerForm" style="display: none;">
+          <div style="margin-bottom: 1rem;">
+            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Full Name *</label>
+            <input type="text" id="regName" class="form-control" required placeholder="Your Name">
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Email Address *</label>
+            <input type="email" id="regEmail" class="form-control" required placeholder="you@example.com">
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Password *</label>
+            <input type="password" id="regPassword" class="form-control" required placeholder="Create a password">
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Phone Number</label>
+            <input type="tel" id="regPhone" class="form-control" placeholder="+91 98765 43210">
+          </div>
+          <div style="margin-bottom: 1.5rem;">
+            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Delivery Address</label>
+            <textarea id="regAddress" class="form-control" rows="2" placeholder="Your residential address"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%;">Create Account & Get 100 Points</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. ADD FLOWER MODAL (Admin & Florist) -->
+  <div id="addFlowerModal" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>🌺 Add Flower to Catalog</h3>
+        <button class="modal-close" onclick="closeModal('addFlowerModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="addFlowerForm">
+          <div style="margin-bottom: 1rem;">
+            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Flower Arrangement Name *</label>
+            <input type="text" id="flowerName" class="form-control" required placeholder="e.g. Royal Purple Lavender Bouquet">
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+            <div>
+              <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Category *</label>
+              <select id="flowerCat" class="form-control category-select" required></select>
+            </div>
+            <div>
+              <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Color *</label>
+              <select id="flowerColor" class="form-control" required>
+                <option value="Red">Red</option>
+                <option value="Pink">Pink</option>
+                <option value="Purple">Purple</option>
+                <option value="White">White</option>
+                <option value="Yellow">Yellow</option>
+                <option value="Blue">Blue</option>
+                <option value="Mixed">Mixed</option>
+              </select>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+            <div>
+              <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Price (₹) *</label>
+              <input type="number" step="0.5" id="flowerPrice" class="form-control" required placeholder="450">
+            </div>
+            <div>
+              <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Initial Stock Qty *</label>
+              <input type="number" id="flowerStock" class="form-control" required placeholder="25">
+            </div>
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Best Occasion</label>
+            <input type="text" id="flowerOccasion" class="form-control" placeholder="Anniversary / Romance / Birthday">
+          </div>
+          <div style="margin-bottom: 1.5rem;">
+            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Description</label>
+            <textarea id="flowerDesc" class="form-control" rows="3" placeholder="Hand-tied fresh bouquet with filler greens..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%;">Add Flower to Storefront</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. ADD CATEGORY MODAL (Admin) -->
+  <div id="addCategoryModal" class="modal-overlay">
+    <div class="modal-dialog" style="max-width: 450px;">
+      <div class="modal-header">
+        <h3>📁 Add Category</h3>
+        <button class="modal-close" onclick="closeModal('addCategoryModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="addCategoryForm">
+          <div style="margin-bottom: 1rem;">
+            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Category Name *</label>
+            <input type="text" id="newCategoryName" class="form-control" required placeholder="e.g. Chrysanthemums">
+          </div>
+          <div style="margin-bottom: 1.5rem;">
+            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Description</label>
+            <textarea id="newCategoryDesc" class="form-control" rows="2" placeholder="Brief description"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%;">Save Category</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. ADD STAFF MODAL (Admin) -->
+  <div id="addStaffModal" class="modal-overlay">
+    <div class="modal-dialog" style="max-width: 450px;">
+      <div class="modal-header">
+        <h3>👩‍🍳 Add Staff Member</h3>
+        <button class="modal-close" onclick="closeModal('addStaffModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="addStaffForm">
+          <div style="margin-bottom: 1rem;">
+            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Staff Name *</label>
+            <input type="text" id="staffName" class="form-control" required placeholder="Staff Full Name">
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Staff Role *</label>
+            <select id="staffRole" class="form-control" required>
+              <option value="Florist">Florist (Arrangement & Prep)</option>
+              <option value="Delivery">Delivery Rider</option>
+              <option value="Admin">Administrator</option>
+            </select>
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Email Address *</label>
+            <input type="email" id="staffEmail" class="form-control" required placeholder="staff@flowershop.com">
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Password *</label>
+            <input type="password" id="staffPassword" class="form-control" required placeholder="Password">
+          </div>
+          <div style="margin-bottom: 1.5rem;">
+            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Phone Number</label>
+            <input type="tel" id="staffPhone" class="form-control" placeholder="+91 98765 00000">
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%;">Create Staff Account</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 9. ADD SUPPLIER MODAL (Admin) -->
+  <div id="addSupplierModal" class="modal-overlay">
+    <div class="modal-dialog" style="max-width: 450px;">
+      <div class="modal-header">
+        <h3>🚛 Register Floral Supplier</h3>
+        <button class="modal-close" onclick="closeModal('addSupplierModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="addSupplierForm">
+          <div style="margin-bottom: 1rem;">
+            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Supplier / Farm Name *</label>
+            <input type="text" id="suppName" class="form-control" required placeholder="e.g. Nilgiris Rose Estate">
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Contact Person / Phone</label>
+            <input type="text" id="suppContact" class="form-control" placeholder="+91 98450 00000">
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Email</label>
+            <input type="email" id="suppEmail" class="form-control" placeholder="orders@nursery.com">
+          </div>
+          <div style="margin-bottom: 1.5rem;">
+            <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Address</label>
+            <textarea id="suppAddress" class="form-control" rows="2" placeholder="Farm location"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%;">Register Supplier</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div id="toastContainer" class="toast-container no-print"></div>
+
+  <!-- FOOTER -->
+  <footer class="footer no-print">
+    <p><strong>BloomCraft Florals</strong> &copy; 2026. Built according to Software Engineering Project Specification.</p>
+    <p style="margin-top: 0.25rem;">Featuring Customer, Staff/Florist, Delivery Rider, and Administrator Portals with SQLite DB.</p>
+  </footer>
+
+  <script src="/js/app.js"></script>
+  <script>
+    function toggleAuthTab(mode) {
+      const loginTab = document.getElementById('authTabLogin');
+      const regTab = document.getElementById('authTabRegister');
+      const loginForm = document.getElementById('loginForm');
+      const regForm = document.getElementById('registerForm');
+      const title = document.getElementById('authModalTitle');
+
+      if (mode === 'login') {
+        loginTab.classList.add('active');
+        regTab.classList.remove('active');
+        loginForm.style.display = 'block';
+        regForm.style.display = 'none';
+        title.textContent = 'Sign In';
+      } else {
+        loginTab.classList.remove('active');
+        regTab.classList.add('active');
+        loginForm.style.display = 'none';
+        regForm.style.display = 'block';
+        title.textContent = 'Register New Customer';
+      }
+    }
+  </script>
+</body>
+</html>
